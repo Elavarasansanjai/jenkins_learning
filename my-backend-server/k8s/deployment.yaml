@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-backend-deployment
+  labels:
+    app: nodejs-backend
+spec:
+  replicas: 2 # Keeps 2 instances running for reliability
+  selector:
+    matchLabels:
+      app: nodejs-backend
+  template:
+    metadata:
+      labels:
+        app: nodejs-backend
+    spec:
+      containers:
+      - name: nodejs-backend
+        # Replace 'YOUR_DOCKERHUB_USERNAME' with your real Docker Hub username
+        image: YOUR_DOCKERHUB_USERNAME/my-backend-server:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000

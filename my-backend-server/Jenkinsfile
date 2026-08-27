@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+
+    environment {
+        // Repository details
+        GIT_URL         = 'https://github.com/Elavarasansanjai/jenkins_learning.git'
+        GIT_BRANCH      = 'main'
+        GIT_CRED_ID     = 'github-credentials'
+        
+        // Cluster & Image details
+        KUBE_CRED_ID    = 'minikube-kubeconfig'
+        IMAGE_NAME      = 'my-backend-server:latest'
+    }
+
+    stages {
+        stage('Pull Code from Git') {
+            steps {
+                // Pulls private repository code using stored Jenkins credentials
+                git branch: "${GIT_BRANCH}",
+                    credentialsId: "${GIT_CRED_ID}",
+                    url: "${GIT_URL}"
+            }
+        }
+
+        stage('Build Image for Minikube') {
+            steps {
+                sh '''
+                    # Direct Docker daemon to Minikube's internal registry
+                    eval $(minikube -p minikube docker-env)
+                    
+                    # Build the image from pulled source code
+                    docker build -t ${IMAGE_NAME} .
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: "${KUBE_CRED_ID}", variable: 'KUBECONFIG')]) {
+                    sh '''
+                        kubectl apply -f k8s/deployment.yaml
+                        kubectl apply -f k8s/service.yaml
+                        kubectl rollout restart deployment/nodejs-backend-deployment
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline Completed Successfully! Code pulled, built, and deployed to Minikube."
+        }
+        failure {
+            echo "Pipeline Failed. Check console logs for errors."
+        }
+    }
+}
