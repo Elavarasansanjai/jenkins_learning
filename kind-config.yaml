@@ -1,0 +1,14 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+
+name: food-cluster
+
+nodes:
+  # Kubernetes Control Plane
+  - role: control-plane
+
+  # Worker Node 1
+  - role: worker
+
+  # Worker Node 2
+  - role: worker

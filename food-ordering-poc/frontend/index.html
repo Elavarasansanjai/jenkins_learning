@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastBites Food Express</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    .container { max-width: 600px; width: 100%; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h1 { color: #e74c3c; margin-top: 0; text-align: center; }
+    .order-card { background: #fafafa; border-left: 5px solid #2ecc71; padding: 15px; margin: 10px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .status { font-weight: bold; padding: 4px 8px; border-radius: 4px; background: #e8f8f5; color: #27ae60; }
+    button { background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; transition: 0.2s; }
+    button:hover { background: #c0392b; }
+    .input-group { margin-top: 15px; display: flex; gap: 10px; }
+    input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🍕 FastBites Food Express</h1>
+    <p style="text-align: center; color: #666;">Live Kubernetes Multi-Node PoC Order Dashboard</p>
+    
+    <div class="input-group">
+      <input type="text" id="foodItem" placeholder="Enter food item (e.g., Tacos)...">
+      <button onclick="placeOrder()" style="width: auto; margin-top: 0;">Order Now</button>
+    </div>
+
+    <h3>Active Customer Orders</h3>
+    <div id="orders-container">Loading orders from backend API...</div>
+    
+    <button onclick="fetchOrders()">🔄 Refresh Order Status</button>
+  </div>
+
+  <script>
+    // Function to fetch orders from Backend API
+    async function fetchOrders() {
+      const container = document.getElementById('orders-container');
+      try {
+        const response = await fetch('/api/orders');
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+          container.innerHTML = '';
+          result.data.forEach(order => {
+            const card = document.createElement('div');
+            card.className = 'order-card';
+            card.innerHTML = `
+              <div>
+                <strong>#${order.id} ${order.item}</strong>
+                <div style="color: #777; font-size: 14px;">Price: ${order.price}</div>
+              </div>
+              <span class="status">${order.status}</span>
+            `;
+            container.appendChild(card);
+          });
+        } else {
+          container.innerHTML = '<p>No active orders found.</p>';
+        }
+      } catch (error) {
+        container.innerHTML = '<p style="color:red;">Failed to connect to Backend API service.</p>';
+        console.error('Error fetching orders:', error);
+      }
+    }
+
+    // Function to post a new order to Backend API
+    async function placeOrder() {
+      const itemInput = document.getElementById('foodItem');
+      const item = itemInput.value.trim();
+      if (!item) return alert('Please enter a food item name!');
+
+      try {
+        await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item: item })
+        });
+        itemInput.value = '';
+        fetchOrders(); // Refresh order list
+      } catch (error) {
+        alert('Failed to place order.');
+      }
+    }
+
+    // Load orders immediately on page open
+    fetchOrders();
+  </script>
+</body>
+</html>

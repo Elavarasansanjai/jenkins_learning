@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage-demo
+  template:
+    metadata:
+      labels:
+        app: storage-demo
+    spec:
+      containers:
+      - name: data-writer
+        image: alpine
+        command: ["/bin/sh", "-c", "while true; do date >> /usr/share/data/live_log.txt; sleep 2; done"]
+        volumeMounts:
+        - name: persistent-storage
+          mountPath: /usr/share/data
+      volumes:
+      - name: persistent-storage
+        persistentVolumeClaim:
+          claimName: demo-pvc
