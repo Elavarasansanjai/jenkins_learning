@@ -10,7 +10,6 @@ pipeline {
     stages {
         stage('Build Docker Image') {
             steps {
-                // Navigate into your subfolder to run docker commands
                 dir("${SUB_DIR}") {
                     sh '''
                         docker build -t ${IMAGE_NAME} .
@@ -24,9 +23,9 @@ pipeline {
                 dir("${SUB_DIR}") {
                     withCredentials([file(credentialsId: "${KUBE_CRED_ID}", variable: 'KUBECONFIG')]) {
                         sh '''
-                            kubectl apply -f k8s/deployment.yaml
-                            kubectl apply -f k8s/service.yaml
-                            kubectl rollout restart deployment/nodejs-backend-deployment
+                            kubectl apply -f k8s/deployment.yaml --insecure-skip-tls-verify=true
+                            kubectl apply -f k8s/service.yaml --insecure-skip-tls-verify=true
+                            kubectl rollout restart deployment/nodejs-backend-deployment --insecure-skip-tls-verify=true
                         '''
                     }
                 }
